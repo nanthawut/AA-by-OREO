@@ -1,7 +1,7 @@
 #Requires AutoHotkey v2.0
 
 PlacingUnits(wSlot, state?) {
-    i := eq.Submit()
+    GetForm()
     pointCounts := Map()
 
     placementPoints := i.PlaceType = "Circle" ? GenerateCirclePoints() : i.PlaceType =
@@ -28,6 +28,7 @@ PlacingUnits(wSlot, state?) {
             ; Place all units for this slot
             while (placedCounts < placements) {
                 for point in placementPoints {
+                    CheckAbility()
                     strPoint := "" point.x point.y
 
                     ; Skip if this coordinate was already used successfully
@@ -39,9 +40,9 @@ PlacingUnits(wSlot, state?) {
                         }
                     }
                     if (pointCounts.Count >= placementPoints.Length) {
+                        placementPoints := GenerateMoreGridPoints(15)
                         pointCounts.Clear()
                         if (slotNumCheck = slotNum) {
-                            placementPoints := GenerateMoreGridPoints(10)
                         } else {
                             slotNumCheck := slotNum
                         }
@@ -54,24 +55,24 @@ PlacingUnits(wSlot, state?) {
                         continue
                     if CheckForXp()
                         return MonitorStage()
-                    CheckEndAndRoute(i)
-                    CheckForCardSelection(i)
+                    CheckEndAndRoute()
+                    CheckForCardSelection()
                     pointCounts[strPoint]++
 
                     if PlaceUnit(point.x, point.y, slotNum) {
                         successfulCoordinates.Push({ x: point.x, y: point.y, slot: slotNum, maxLevel: false })
                         placedCounts++
                         AddLog("Placed Unit " slotNum " (" placedCounts "/" placements ")")
-
-                        CheckAbility(i)
+                        CheckAbility(point.x, point.y)
                         IClick(560, 560) ; Move Click
-                        CheckForCardSelection(i)
+                        CheckForCardSelection()
 
                         break
                     }
                     Reconnect()
-                    if (state = "l")
-                        UpgradeUnits("m", true, i)
+                    if (successfulCoordinates.length > 8) {
+                        UpgradeUnits("m", true)
+                    }
                 }
             }
 
@@ -79,10 +80,10 @@ PlacingUnits(wSlot, state?) {
     }
 
     AddLog("All units placed to requested amounts")
-    UpgradeUnits(state, false, i)
+    UpgradeUnits(state, false)
 }
 
-UpgradeUnits(state, oneTick, i) {
+UpgradeUnits(state, oneTick) {
     global successfulCoordinates
     totalUnits := Map()
     upgradedCount := Map()
@@ -102,11 +103,6 @@ UpgradeUnits(state, oneTick, i) {
     if (hasSuccessAll)
         return
 
-    ; AddLog("Initiating Unit Upgrades...")
-
-    ; AddLog("Using priority upgrade system")
-
-    ; Go through each priority level (1-6)
     for priorityNum in [1, 2, 3, 4, 5, 6] {
         ; Find which slot has this priority number
         loop {
@@ -121,10 +117,11 @@ UpgradeUnits(state, oneTick, i) {
                         return
                     }
                     Reconnect()
-                    CheckEndAndRoute(i)
+                    CheckEndAndRoute()
 
                     if (!coord.maxLevel) {
-                        CheckForCardSelection(i)
+                        CheckForCardSelection()
+                        CheckAbility()
                         UpgradeUnit(coord.x, coord.y)
                         unitFinish := false
                         if MaxUpgrade() {
@@ -132,7 +129,7 @@ UpgradeUnits(state, oneTick, i) {
                             AddLog("Max upgrade reached for Unit " coord.slot " (" upgradedCount[coord.slot
                                 ] "/" totalUnits[coord.slot] ")")
                             successfulCoordinates[index].maxLevel := true
-                            Sleep (100)
+                            ; Sleep (100)
                             IClick(325, 185) ;Close upg menu
                             if (oneTick)
                                 return
@@ -144,10 +141,9 @@ UpgradeUnits(state, oneTick, i) {
                             return
                         }
 
-                        CheckAbility(i)
                         IClick(560, 560) ; Move Click
                         Reconnect()
-                        CheckEndAndRoute(i)
+                        CheckEndAndRoute()
                         if (!i.SwitchUpgrade) {
                             break
                         }
@@ -167,9 +163,9 @@ UpgradeUnits(state, oneTick, i) {
 }
 
 RestartStage() {
-    i := eq.Submit()
+    GetForm()
     moveRobloxWindow()
-    currentMap := DetectMap(i)
+    currentMap := DetectMap()
 
     ; Wait for loading
     CheckLoaded()
@@ -199,25 +195,24 @@ RestartStage() {
     MonitorStage()
 }
 
-MonitorEndScreen(i) {
+MonitorEndScreen() {
     global inChallengeMode
     lastResult := ''
-
+    ResetStoragePlay()
     loop {
         if (IFindText(itemrecive)) {
             ClickUntilGone(560, 560, itemrecive, , -1, 0)
         }
-        Sleep(3000)
 
         IClick(560, 560)
         IClick(560, 560)
 
         if (IFindText(UnitExit)) {
-            ClickUntilGone(0, 0, UnitExit, , -1, -35)
+            ClickUntilGone(0, 0, UnitExit, 500, -1, -35)
         }
 
         if (IFindText(NextText)) {
-            ClickUntilGone(0, 0, NextText, , -1, -40)
+            ClickUntilGone(0, 0, NextText, 500, -1, -40)
         }
 
         ; Now handle each mode
@@ -314,22 +309,20 @@ MonitorStage() {
 
     lastClickTime := A_TickCount
 
-    i := eq.Submit()
+    GetForm()
 
     loop {
         Sleep(1000)
 
-        if (i.Mode = "Story" && i.Type = "Infinity" || i.Mode = "Winter Event") {
-            timeElapsed := A_TickCount - lastClickTime
-            if (timeElapsed >= 300000) {  ; 5 minutes
-                AddLog("Performing anti-AFK click")
-                IClick(560, 560)  ; Move click
-                lastClickTime := A_TickCount
-            }
+        timeElapsed := A_TickCount - lastClickTime
+        if (timeElapsed >= 300000) {  ; 5 minutes
+            AddLog("Performing anti-AFK click")
+            IClick(560, 560)  ; Move click
+            lastClickTime := A_TickCount
         }
 
-        if (i.Mode = "Winter Event") {
-            CheckForCardSelection(i)
+        if (i.Mode = "Winter_Event") {
+            CheckForCardSelection()
         }
 
         ; Check for XP screen
@@ -345,28 +338,28 @@ MonitorStage() {
             }
 
             ; Check for Victory or Defeat
-            if (IFindText(VictoryText) or (IFindText(VictoryText2))) {
+            if (IFindText(VictoryText)) {
                 AddLog("Victory detected - Stage Length: " stageLength)
                 Wins++
 
                 if (i.Mode = "Portal") {
-                    return HandlePortalEnd(i)
+                    return HandlePortalEnd()
                 } else if (i.Mode = "Contract") {
                     return HandleContractEnd()
                 } else {
-                    return MonitorEndScreen(i)
+                    return MonitorEndScreen()
                 }
             }
-            else if (IFindText(DefeatText) or (IFindText(DefeatText2))) {
+            else if (IFindText(DefeatText)) {
                 AddLog("Defeat detected - Stage Length: " stageLength)
                 loss++
                 ; SendWebhookWithTime(false, stageLength)
                 if (i.Mode = "Portal") {
-                    return HandlePortalEnd(i)
+                    return HandlePortalEnd()
                 } else if (i.Mode = "Contract") {
                     return HandleContractEnd()
                 } else {
-                    return MonitorEndScreen(i)
+                    return MonitorEndScreen()
                 }
             }
         }
@@ -384,12 +377,35 @@ CheckForXp() {
     return false
 }
 
-CheckAbility(i) {
+CheckAbility(x?, y?) {
+    global unitBuff, buffTime
     if (i.AutoAbility) {
-        if (IFindText(AutoOff)) {
-            IL_Create(373, 237)  ; Turn ability on
-            AddLog("Auto Ability Enabled")
+        cd := [0, 23050, 7000, 7000]
+        if (IFindText(AutoOff) && x && y && unitBuff.Length < 4) {
+            unitBuff.Push({ x: x, y: y, num: unitBuff.Length + 2, cd: cd[unitBuff.Length + 1], on: false })
+            AddLog("Ability Add " unitBuff.Length)
         }
+
+        if (unitBuff.Length = 4) {
+            buffTime := A_TickCount
+            for start IN [1, 3, 2, 4] {
+                while (!unitBuff[start].on) {
+                    CheckForCardSelection()
+                    if (unitBuff[start].cd <= A_TickCount - buffTime) {
+                        IClick(unitBuff[start].x, unitBuff[start].y)
+                        if (IFindText(AutoOff)) {
+                            buffTime := A_TickCount
+                            IClick(373, 237)
+                            unitBuff[start].on := true
+                            AddLog('Ability ' unitBuff[start].num - 1 ' is On')
+                            IClick(560, 560)
+                        }
+                    }
+                }
+
+            }
+        }
+
     }
 }
 
@@ -429,7 +445,7 @@ Reconnect() {
 
 HandleContractEnd() {
     global inChallengeMode
-    i := eq.Submit()
+    GetForm()
     loop {
         Sleep(3000)
 
@@ -480,104 +496,11 @@ HandleContractEnd() {
                 AddLog("Starting next contract")
                 Sleep(1500)
                 ClickUntilGone(0, 0, LobbyText, +120, -35, LobbyText2)
-                return HandleNextContract(i)
+                return HandleNextContract()
             }
         }
         Reconnect()
     }
-}
-
-HandleContractJoin(i) {
-
-    ; Handle 4-5 Page pattern selection
-    if (selectedPage = "Page 4-5") {
-        selectedPage := GetContractPage()
-        AddLog("Pattern selected: " selectedPage)
-    }
-
-    pageNum := selectedPage = "Page 4-5" ? GetContractPage() : selectedPage
-    pageNum := Integer(RegExReplace(RegExReplace(pageNum, "Page\s*", ""), "-.*", ""))
-
-    ; Define click coordinates for each page
-    clickCoords := Map(
-        1, { openHere: { x: 170, y: 420 }, matchmaking: { x: 240, y: 420 } },  ; Example coords for page 1
-        2, { openHere: { x: 330, y: 420 }, matchmaking: { x: 400, y: 420 } },  ; Example coords for page 2
-        3, { openHere: { x: 490, y: 420 }, matchmaking: { x: 560, y: 420 } }, ; Example coords for page 3
-        4, { openHere: { x: 237, y: 420 }, matchmaking: { x: 305, y: 420 } },  ; Example coords for page 4
-        5, { openHere: { x: 397, y: 420 }, matchmaking: { x: 465, y: 420 } },  ; Example coords for page 5
-        6, { openHere: { x: 557, y: 420 }, matchmaking: { x: 625, y: 420 } }  ; Example coords for page 6
-    )
-
-    ; First scroll if needed for pages 4-6
-    if (pageNum >= 4) {
-        IClick(445, 300)
-        Sleep(200)
-        loop 5 {
-            SendInput("{WheelDown}")
-            Sleep(150)
-        }
-        Sleep(300)
-    }
-
-    ; Get coordinates for the selected page
-    pageCoords := clickCoords[pageNum]
-
-    ; Handle different join types
-    if (i.Type = "Creating") {
-        AddLog("Creating contract portal on page " pageNum)
-        IClick(pageCoords.openHere.x, pageCoords.openHere.y)
-        Sleep(300)
-        IClick(255, 355)
-        Sleep(20000)
-        AddLog("Waiting 20 seconds for others to join")
-        IClick(400, 460)
-    } else if (i.Type = "Joining") {
-        AddLog("Attempting to join by holding E")
-        SendInput("{e down}")
-        Sleep(5000)
-        SendInput("{e up}")
-    } else if (i.Type = "Solo") {
-        AddLog("Attempting to start solo")
-        IClick(pageCoords.openHere.x, pageCoords.openHere.y)
-        Sleep(300)
-        IClick(255, 355)
-        Sleep 300
-        IClick(400, 468) ; Start Contract
-    } else if (i.Type = "Matchmaking") {
-        AddLog("Joining matchmaking for contract on page " pageNum)
-        IClick(pageCoords.matchmaking.x, pageCoords.matchmaking.y)  ; Click matchmaking button
-        Sleep(300)
-
-        ; Try captcha
-        if (!CaptchaDetect(252, 292, 300, 50, 400, 335)) {
-            AddLog("Captcha not detected, retrying...")
-            IClick(585, 190)  ; Click close
-            return
-        }
-        IClick(300, 385)  ; Enter captcha
-
-        startTime := A_TickCount
-        while (A_TickCount - startTime < 20000) {  ; Check for 20 seconds
-            if !(IFindText(AreaText)) {
-                AddLog("Area text gone - matchmaking successful")
-                return true
-            }
-            Sleep(200)  ; Check every 200ms
-        }
-
-        AddLog("Matchmaking failed - still on area screen after 20s, retrying...")
-        IClick(445, 220)
-        Sleep(1000)
-        loop 5 {
-            SendInput("{WheelUp}")
-            Sleep(150)
-        }
-        Sleep(1000)
-        return HandleContractJoin(i)
-    }
-
-    AddLog("Joining Contract Mode")
-    return true
 }
 
 PlaceUnit(x, y, slot := 1) {
@@ -588,61 +511,39 @@ PlaceUnit(x, y, slot := 1) {
     SendInput("q")
 
     if UnitPlaced() {
-        Sleep 15
+        IClick(325, 185)
         return true
     }
     return false
 }
 
 MaxUpgrade() {
-    Sleep 500
-    ; Check for max text
-    if (IFindText(MaxText) or (IFindText(MaxText2))) {
+    if (IFindText(MaxText, 1000)) {
         return true
     }
+    ; Check for max text
     return false
 }
 
-CheckEndAndRoute(i) {
+CheckEndAndRoute() {
     if (IFindText(LobbyText)) {
         AddLog("Found end screen")
         if (i.Mode = "Contract") {
             return HandleContractEnd()
         } else {
-            return MonitorEndScreen(1)
+            return MonitorEndScreen()
         }
     }
     return false
 }
 
 UnitPlaced() {
-    PlacementSpeed() ; Custom Placement Speed
-    ; Check for upgrade text
-    if (IFindText(UpgradeText) or (IFindText(UpgradeText2))) {
+    if (IFindText(UpgradeText, PlacementSpeed())) {
         AddLog("Unit Placed Successfully")
-        IClick(325, 185) ; close upg menu
+        ; close upg menu
         return true
     }
     return false
-}
-
-PlacementSpeed() {
-    i := eq.Submit()
-    if i.PlaceSpeed = "2.25 sec" {
-        sleep 2250
-    }
-    else if i.PlaceSpeed = "2 sec" {
-        sleep 2000
-    }
-    else if i.PlaceSpeed = "2.5 sec" {
-        sleep 2500
-    }
-    else if i.PlaceSpeed = "2.75 sec" {
-        sleep 2.75
-    }
-    else if i.PlaceSpeed = "3 sec" {
-        sleep 3000
-    }
 }
 
 UpgradeUnit(x, y) {
@@ -653,12 +554,12 @@ UpgradeUnit(x, y) {
 
 CheckLoaded() {
     loop {
-        Sleep(1000)
+        Sleep(500)
 
         ; Check for vote screen
         if (IFindText(VoteStart)) {
             AddLog("Successfully Loaded In")
-            Sleep(1000)
+            Sleep(500)
             break
         }
 
@@ -668,7 +569,7 @@ CheckLoaded() {
 
 StartedGame() {
     loop {
-        Sleep(1000)
+        Sleep(500)
         if (IFindText(VoteStart)) {
             IClick(350, 103) ; click yes
             IClick(350, 100)
@@ -683,7 +584,7 @@ StartedGame() {
     }
 }
 
-DetectMap(i) {
+DetectMap() {
     AddLog("Determining Movement Necessity on Map...")
     startTime := A_TickCount
 
@@ -721,11 +622,11 @@ DetectMap(i) {
             "Air Craft", AirCraft,
             "Hellish City", Hellish,
             "Contracts", ContractLoadingScreen,
-            "Winter Event", Winter
+            "Winter_Event", Winter
         )
 
         for mapName, pattern in mapPatterns {
-            if (i.Mode = "Winter Event" or i.Mode = "Contracts") {
+            if (i.Mode = "Winter_Event" or i.Mode = "Contracts") {
                 if (IFindText(pattern)) {
                     AddLog("Detected map: " mapName)
                     return mapName
@@ -743,8 +644,8 @@ DetectMap(i) {
     }
 }
 
-CheckForCardSelection(i) {
-    if (i.Mode = "Winter Event") {
+CheckForCardSelection() {
+    if (i.Mode = "Winter_Event") {
         if (IFindText(pick_card)) {
             cardSelector()
         }
@@ -760,95 +661,95 @@ cardSelector() {
 
     IClick(59, 572) ; Untarget Mouse
     sleep 100
+    list := []
+    loop 19 {
+        text := 'Priority' A_Index
+        list.Push(card.%text%)
+    }
+    for index, priority in list {
+        if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, %priority%)) {
 
-    ; for index, priority in priorityOrder {
-    ;     if (!textCards.Has(priority)) {
-    ;         ;AddLog(Format("Card {} not available in textCards", priority))
-    ;         continue
-    ;     }
-    ;     if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, textCards.Get(priority))) {
+            if (priority == "shield") {
+                if (card.Heighest == 1) {
+                    AddLog("Picking highest shield debuff")
+                    if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, shield3)) {
+                        AddLog("Found shield 3")
+                    }
+                    else if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, shield2)) {
+                        AddLog("Found shield 2")
+                    }
+                    else if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, shield1)) {
+                        AddLog("Found shield 1")
+                    }
+                }
 
-    ;         if (priority == "shield") {
-    ;             if (RadioHighest.Value == 1) {
-    ;                 AddLog("Picking highest shield debuff")
-    ;                 if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, shield3)) {
-    ;                     AddLog("Found shield 3")
-    ;                 }
-    ;                 else if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, shield2)) {
-    ;                     AddLog("Found shield 2")
-    ;                 }
-    ;                 else if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, shield1)) {
-    ;                     AddLog("Found shield 1")
-    ;                 }
-    ;             }
+            }
+            else if (priority == "speed") {
+                if (card.Heighest == 1) {
+                    AddLog("Picking highest speed debuff")
+                    if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, speed_3)) {
+                        AddLog("Found speed 3")
+                    }
+                    else if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, speed_2)) {
+                        AddLog("Found speed 2")
+                    }
+                    else if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, speed_1)) {
+                        AddLog("Found speed 1")
+                    }
+                }
+            }
+            else if (priority == "health") {
+                if (card.Heighest == 1) {
+                    AddLog("Picking highest health debuff")
+                    if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, health3)) {
+                        AddLog("Found health 3")
+                    }
+                    else if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, health2)) {
+                        AddLog("Found health 2")
+                    }
+                    else if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, health1)) {
+                        AddLog("Found health 1")
+                    }
+                }
+            }
+            else if (priority == "regen") {
+                if (card.Heighest == 1) {
+                    AddLog("Picking highest regen debuff")
+                    if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, regen3)) {
+                        AddLog("Found regen 3")
+                    }
+                    else if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, regen2)) {
+                        AddLog("Found regen 2")
+                    }
+                    else if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, regen1)) {
+                        AddLog("Found regen 1")
+                    }
+                }
+            }
+            else if (priority == "yen") {
+                if (FindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, yen2)) {
+                    AddLog("Found yen 2")
+                }
+                else {
+                    AddLog("Found yen 1")
+                }
+            }
 
-    ;         }
-    ;         else if (priority == "speed") {
-    ;             if (RadioHighest.Value == 1) {
-    ;                 AddLog("Picking highest speed debuff")
-    ;                 if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, speed3)) {
-    ;                     AddLog("Found speed 3")
-    ;                 }
-    ;                 else if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, speed2)) {
-    ;                     AddLog("Found speed 2")
-    ;                 }
-    ;                 else if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, speed1)) {
-    ;                     AddLog("Found speed 1")
-    ;                 }
-    ;             }
-    ;         }
-    ;         else if (priority == "health") {
-    ;             if (RadioHighest.Value == 1) {
-    ;                 AddLog("Picking highest health debuff")
-    ;                 if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, health3)) {
-    ;                     AddLog("Found health 3")
-    ;                 }
-    ;                 else if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, health2)) {
-    ;                     AddLog("Found health 2")
-    ;                 }
-    ;                 else if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, health1)) {
-    ;                     AddLog("Found health 1")
-    ;                 }
-    ;             }
-    ;         }
-    ;         else if (priority == "regen") {
-    ;             if (RadioHighest.Value == 1) {
-    ;                 AddLog("Picking highest regen debuff")
-    ;                 if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, regen3)) {
-    ;                     AddLog("Found regen 3")
-    ;                 }
-    ;                 else if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, regen2)) {
-    ;                     AddLog("Found regen 2")
-    ;                 }
-    ;                 else if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, regen1)) {
-    ;                     AddLog("Found regen 1")
-    ;                 }
-    ;             }
-    ;         }
-    ;         else if (priority == "yen") {
-    ;             if (IFindText(&cardX, &cardY, 209, 203, 652, 404, 0, 0, yen2)) {
-    ;                 AddLog("Found yen 2")
-    ;             }
-    ;             else {
-    ;                 AddLog("Found yen 1")
-    ;             }
-    ;         }
-
-    ;         FindText().Click(cardX, cardY, 0)
-    ;         MouseMove 0, 10, 2, "R"
-    ;         Click 2
-    ;         sleep 1000
-    ;         MouseMove 0, 120, 2, "R"
-    ;         Click 2
-    ;         AddLog(Format("Picked card: {}", priority))
-    ;         sleep 1000
-    ;         return
-    ;     }
-    ; }
+            FindText().Click(cardX, cardY, 0)
+            MouseMove 0, 10, 2, "R"
+            Click 2
+            sleep 1000
+            MouseMove 0, 120, 2, "R"
+            Click 2
+            AddLog(Format("Picked card: {}", priority))
+            sleep 1000
+            return
+        }
+    }
     AddLog("Failed to pick a card")
 }
 
-HandlePortalEnd(i) {
+HandlePortalEnd() {
 
     loop {
         Sleep(3000)
@@ -886,7 +787,7 @@ HandlePortalEnd(i) {
         }
 
         Reconnect()
-        CheckEndAndRoute(i)
+        CheckEndAndRoute()
     }
 }
 
@@ -1152,7 +1053,7 @@ CheckLobby() {
     return StartSelectedMode()
 }
 
-HandleNextContract(i) {
+HandleNextContract() {
     selectedPage := i.Type
     if (selectedPage = "Page 4-5") {
         selectedPage := GetContractPage()
@@ -1285,22 +1186,22 @@ HandleMapMovement(MapName, i) {
             MoveForAirCraft()
         case "Hellish City":
             MoveForHellish()
-        case "Winter Event":
-            MoveForWinterEvent(i)
+        case "Winter_Event":
+            MoveForWinterEvent()
         case "Contracts":
-            MoveForContracts(i)
+            MoveForContracts()
     }
 }
 
-FindAndClickColor(i, targetColor?, searchArea := [0, 0, GetWindowCenter(rblxID).Width, GetWindowCenter(rblxID).Height]) { ;
+FindAndClickColor(targetColor?, searchArea := [0, 0, GetWindowCenter(rblxID).Width, GetWindowCenter(rblxID).Height]) { ;
 
-    targetColor := (i.Mode = "Winter Event" ? 0x006783 : 0xFAFF4D)
+    targetColor := (i.Mode = "Winter_Event" ? 0x006783 : 0xFAFF4D)
     x1 := searchArea[1], y1 := searchArea[2], x2 := searchArea[3], y2 := searchArea[4]
 
     ; Perform the pixel search
     if (PixelSearch(&foundX, &foundY, x1, y1, x2, y2, targetColor, 0)) {
         ; Color found, click on the detected coordinates
-        IClick(foundX, foundY, "Right")
+        IClick(foundX, foundY, , "Right")
         AddLog("Color found and clicked at: X" foundX " Y" foundY)
         Sleep 2000
         return true
@@ -1322,12 +1223,12 @@ MoveForHauntedAcademy() {
 }
 
 MoveForSpaceCenter() {
-    IClick(160, 280, "Right")
+    IClick(160, 280, , "Right")
     Sleep (7000)
 }
 
 MoveForMountainTemple() {
-    IClick(40, 500, "Right")
+    IClick(40, 500, , "Right")
     Sleep (4000)
 }
 
@@ -1350,13 +1251,13 @@ MoveForAirCraft() {
 }
 
 MoveForHellish() {
-    IClick(600, 300, "Right")
+    IClick(600, 300, , "Right")
     Sleep (7000)
 }
 
-MoveForWinterEvent(i) {
+MoveForWinterEvent() {
     loop {
-        if FindAndClickColor(i) {
+        if FindAndClickColor() {
             break
         }
         else {
@@ -1372,10 +1273,10 @@ MoveForWinterEvent(i) {
     }
 }
 
-MoveForContracts(i) {
+MoveForContracts() {
     IClick(590, 15) ; click on paths
     loop {
-        if FindAndClickColor(i) {
+        if FindAndClickColor() {
             IClick(590, 15) ; click on paths
             break
         }
@@ -1393,13 +1294,13 @@ MoveForContracts(i) {
 }
 
 MoveForSnowyTown() {
-    IClick(700, 125, "Right")
+    IClick(700, 125, , "Right")
     Sleep (6000)
-    IClick(615, 115, "Right")
+    IClick(615, 115, , "Right")
     Sleep (3000)
-    IClick(725, 300, "Right")
+    IClick(725, 300, , "Right")
     Sleep (3000)
-    IClick(715, 395, "Right")
+    IClick(715, 395, , "Right")
     Sleep (3000)
 }
 
@@ -1412,18 +1313,18 @@ MoveForNavyBay() {
 }
 
 MoveForSandVillage() {
-    IClick(777, 415, "Right")
+    IClick(777, 415, , "Right")
     Sleep (3000)
-    IClick(560, 555, "Right")
+    IClick(560, 555, , "Right")
     Sleep (3000)
-    IClick(125, 570, "Right")
+    IClick(125, 570, , "Right")
     Sleep (3000)
-    IClick(200, 540, "Right")
+    IClick(200, 540, , "Right")
     Sleep (3000)
 }
 
 MoveForFiendCity() {
-    IClick(185, 410, "Right")
+    IClick(185, 410, , "Right")
     Sleep (3000)
     SendInput ("{a down}")
     Sleep (3000)
@@ -1441,25 +1342,25 @@ MoveForSpiritWorld() {
     SendInput ("{d up}")
     SendInput ("{w up}")
     sleep(500)
-    IClick(400, 15, "Right")
+    IClick(400, 15, , "Right")
     sleep(4000)
 }
 
 MoveForAntKingdom() {
-    IClick(130, 550, "Right")
+    IClick(130, 550, , "Right")
     Sleep (3000)
-    IClick(130, 550, "Right")
+    IClick(130, 550, , "Right")
     Sleep (4000)
-    IClick(30, 450, "Right")
+    IClick(30, 450, , "Right")
     Sleep (3000)
-    IClick(120, 100, "Right")
+    IClick(120, 100, , "Right")
     sleep (3000)
 }
 
 MoveForMagicTown() {
-    IClick(700, 315, "Right")
+    IClick(700, 315, , "Right")
     Sleep (2500)
-    IClick(585, 535, "Right")
+    IClick(585, 535, , "Right")
     Sleep (3000)
     SendInput ("{d down}")
     Sleep (3800)
@@ -1469,34 +1370,34 @@ MoveForMagicTown() {
 MoveForMagicHill() {
     color := PixelGetColor(630, 125)
     if (!IsColorInRange(color, 0xFFD100)) {
-        IClick(500, 20, "Right")
+        IClick(500, 20, , "Right")
         Sleep (3000)
-        IClick(500, 20, "Right")
+        IClick(500, 20, , "Right")
         Sleep (3500)
-        IClick(285, 15, "Right")
+        IClick(285, 15, , "Right")
         Sleep (2500)
-        IClick(285, 25, "Right")
+        IClick(285, 25, , "Right")
         Sleep (3000)
-        IClick(410, 25, "Right")
+        IClick(410, 25, , "Right")
         Sleep (3000)
-        IClick(765, 150, "Right")
+        IClick(765, 150, , "Right")
         Sleep (3000)
-        IClick(545, 30, "Right")
+        IClick(545, 30, , "Right")
         Sleep (3000)
     } else {
-        IClick(45, 185, "Right")
+        IClick(45, 185, , "Right")
         Sleep (3000)
-        IClick(140, 250, "Right")
+        IClick(140, 250, , "Right")
         Sleep (2500)
-        IClick(25, 485, "Right")
+        IClick(25, 485, , "Right")
         Sleep (3000)
-        IClick(110, 455, "Right")
+        IClick(110, 455, , "Right")
         Sleep (3000)
-        IClick(40, 340, "Right")
+        IClick(40, 340, , "Right")
         Sleep (3000)
-        IClick(250, 80, "Right")
+        IClick(250, 80, , "Right")
         Sleep (3000)
-        IClick(230, 110, "Right")
+        IClick(230, 110, , "Right")
         Sleep (3000)
     }
 }

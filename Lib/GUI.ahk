@@ -5,6 +5,8 @@ qwe.menubtn := qwe.Add('Picture', 'w80 h80 +BackgroundTrans cffffff', "Resource\
 qwe.menubtn.OnEvent('Click', (*) => OnMenu())
 qwe.unitbtn := qwe.Add('Picture', 'xp+20 yp+80 w50 h50 Hidden', 'Resource\unit.png')
 qwe.unitbtn.OnEvent('Click', (*) => toggleEQ())
+qwe.card := qwe.Add('Picture', 'xp yp+60 w50 h50 Hidden', 'Resource\unit.png')
+qwe.card.OnEvent('Click', (*) => PCS.Show())
 qwe.exitbtn := qwe.Add('Picture', 'xp yp+60 w50 h50 Hidden', 'Resource\cross.png')
 qwe.exitbtn.OnEvent('Click', (*) => ExitApp())
 qwe.BackColor := "0e0606"
@@ -16,6 +18,7 @@ qwe.Show("x" A_ScreenWidth - 100 " y30")
 OnMenu() {
     qwe.unitbtn.Visible := !qwe.unitbtn.Visible
     qwe.exitbtn.Visible := !qwe.exitbtn.Visible
+    qwe.card.Visible := !qwe.card.Visible
     eq.Hide()
 }
 ;==============================================================================
@@ -83,3 +86,32 @@ ModeChange() {
         ddl.Choose(1)
     }
 }
+
+PCS := Gui("+AlwaysOnTop +Owner" qwe.Hwnd)
+PCS.SetFont("s10 bold", "Segoe UI")
+PCS.MarginX := 20
+PCS.MarginY := 20
+PCS.Add("GroupBox", "x30 y25 w180 h570 Section", "Modifier Priority Order")
+
+options := ["new_path", "range_3", "attack_3", "cooldown_3", "range_2", "attack_2", "cooldown_2", "blessing_2",
+    "range_1", "attack_1", "cooldown_1", "blessing_1", "shield", "explosive_death_21", "explosive_death_3", "speed",
+    "health", "regen", "yen"]
+
+numDropDowns := 19
+yStart := 50
+ySpacing := 28
+
+for index, card in options {
+    if (index > numDropDowns)
+        break
+    yPos := yStart + ((index - 1) * ySpacing)
+    PCS.Add("Text", Format("x38 y{} w30 h17", yPos), index)
+    PCS.Add("DropDownList", Format("x60 y{} w135 Choose{} vPriority{}", yPos, index, index), options)
+
+}
+
+PCS.Add("GroupBox", "x30 y610 w180 h120", "Debuff Priority")
+PCS.Add("Radio", "x54 y630 w120 h23 Checked", "Random Tier")
+PCS.Add("Radio", "x54 y655 w120 h23 vHeighest", "Highest Tier")
+PCS.Add("Text", "x12 x54 y680 w180 +BackgroundTrans", "Random = Pick any")
+PCS.Add("Text", "x12 x54 y700 w180 +BackgroundTrans", "Highest = Tier 3>2>1")

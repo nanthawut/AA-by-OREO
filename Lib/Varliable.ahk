@@ -3,13 +3,16 @@
 hotKeySetting := [
     'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7'
 ]
-logName := ['Form']
+logName := ['Form', 'Card']
 successfulCoordinates := []
 firstplace := []
 inChallengeMode := false
 Wins := 0
 loss := 0
+unitBuff := []
+buffTime := 0
 slotU := ['1', '2', '3', '4', '5', '6']
+i := Map()
 placeSpeed := ["2.25 sec", "2 sec", "2.5 sec", "2.75 sec", "3 sec"]
 placeTpye := ["Random", "Grid", "Circle", "Spiral", "Up and Down"]
 menuTooltip := "Hi! Click me!! `nF1 Process `nF2 Start Mode `nF3 Reload `nF4 Pause"

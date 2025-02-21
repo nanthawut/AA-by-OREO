@@ -6,6 +6,7 @@
 #Include Lib\GUI.ahk
 #Include Lib\Fuction.ahk
 #Include Lib\InPlay.ahk
+#Include Lib\Lobby.ahk
 
 SendMode('Event')
 
@@ -20,11 +21,8 @@ RegisterHotkey() {
 RegisterHotkey()
 loadSetting()
 
-; WinGetPos(&OutX, &OutY, &OutWidth, &OutHeight, rblxID)
-; MsgBox Format('x: {} y: {} width: {} height: {}', OutY, OutY, OutWidth, OutHeight)
-
 StartSelectedMode() {
-    i := eq.Submit()
+    GetForm()
     moveRobloxWindow()
     ClickUntilGone(0, 0, xlistplayer, 1000, -1, -35)
     ClickUntilGone(0, 0, xClose, 1000, -1, -35)
@@ -34,16 +32,12 @@ StartSelectedMode() {
         inChallengeMode := true
         firstStartup := false
         challengeStartTime := A_TickCount  ; Set initial challenge time
-        MoveTo("Challenge")
-    } else {
-        AddLog("Moving to position for " i.Mode)
-        MoveTo(i.Mode)
-        while !(IFindText(ModeCancel)) {
-            MoveTo(i.Mode)
-        }
+    }
+    
+    MoveTo()
+    while !(IFindText(ModeCancel) || IFindText(JoinMatchmaking)) {
+        MoveTo()
     }
 
     AddLog("Starting " i.Map " - " i.Type)
-
-    ; MonitorStage()
 }
