@@ -3,11 +3,19 @@
 hotKeySetting := [
     'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7'
 ]
-logName :=['Form']
+logName := ['Form']
+successfulCoordinates := []
+firstplace := []
+inChallengeMode := false
+Wins := 0
+loss := 0
 slotU := ['1', '2', '3', '4', '5', '6']
-menuTooltip := "F1 Process `nF2 Start Mode `nF3 Reload `nF4 Pause"
+placeSpeed := ["2.25 sec", "2 sec", "2.5 sec", "2.75 sec", "3 sec"]
+placeTpye := ["Random", "Grid", "Circle", "Spiral", "Up and Down"]
+menuTooltip := "Hi! Click me!! `nF1 Process `nF2 Start Mode `nF3 Reload `nF4 Pause"
 mAr := {
-    mode: ["Story", "Legend", "Raid", "Infinity_Castle", "Contract", "Cursed_Womb", "Portal", "Winter_Event"],
+    mode: ["Story", "Legend", "Raid", "Infinity_Castle", "Contract", "Cursed_Womb", "Portal", "Winter_Event",
+        "Challenge"],
     Story: [
         ["Planet Greenie", "Walled City", "Snowy Town", "Sand Village", "Navy Bay", "Fiend City", "Spirit World",
             "Ant Kingdom", "Magic Town", "Haunted Academy", "Magic Hills", "Space Center", "Alien Spaceship",
@@ -33,5 +41,6 @@ mAr := {
         ["Creating", "Joining"]
     ]
 }
-
+rblxID := "ahk_exe RobloxPlayerBeta.exe"
 pathCongif := A_ScriptDir "\Config\Setting.ini"
+pathLog := A_ScriptDir "\Log.ini"
