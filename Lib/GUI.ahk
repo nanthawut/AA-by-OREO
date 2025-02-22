@@ -5,9 +5,9 @@ qwe.menubtn := qwe.Add('Picture', 'w80 h80 +BackgroundTrans cffffff', "Resource\
 qwe.menubtn.OnEvent('Click', (*) => OnMenu())
 qwe.unitbtn := qwe.Add('Picture', 'xp+20 yp+80 w50 h50 Hidden', 'Resource\unit.png')
 qwe.unitbtn.OnEvent('Click', (*) => toggleEQ())
-qwe.card := qwe.Add('Picture', 'xp yp+60 w50 h50 Hidden', 'Resource\unit.png')
+qwe.card := qwe.Add('Picture', 'x25 yp+60 w50 h50 Hidden', 'Resource\card.png')
 qwe.card.OnEvent('Click', (*) => PCS.Show())
-qwe.exitbtn := qwe.Add('Picture', 'xp yp+60 w50 h50 Hidden', 'Resource\cross.png')
+qwe.exitbtn := qwe.Add('Picture', 'xp+5 yp+60 w50 h50 Hidden', 'Resource\cross.png')
 qwe.exitbtn.OnEvent('Click', (*) => ExitApp())
 qwe.BackColor := "0e0606"
 WinSetTransColor("0e0606", qwe)
