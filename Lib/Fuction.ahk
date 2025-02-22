@@ -18,12 +18,12 @@ ResetStoragePlay() {
 
 TogglePause(*) {
     Pause -1
+    moveRobloxWindow()
     if (A_IsPaused) {
         AddLog("Macro Paused")
         Sleep(1000)
     } else {
         AddLog("Macro Resumed")
-        moveRobloxWindow()
         Sleep(1000)
     }
 }
@@ -32,6 +32,9 @@ PlacementSpeed() {
     GetForm()
     if i.PlaceSpeed = "2.25 sec" {
         return 2250
+    }
+    else if i.PlaceSpeed = "1.5 sec" {
+        return 1500
     }
     else if i.PlaceSpeed = "2 sec" {
         return 2000
@@ -80,7 +83,6 @@ loadSetting() {
                 }
             }
         }
-    ModeChange()
 }
 
 ExitFunc(ExitReason, ExitCode) {
@@ -88,6 +90,10 @@ ExitFunc(ExitReason, ExitCode) {
 }
 
 IClick(x, y, time := 50, LR := "Left") {
+    if !WinExist(rblxID) {
+        AddLog("Waiting for Roblox window...")
+        return
+    }
     WinActivate(rblxID)
     MouseMove(x, y)
     MouseMove(1, 0, , "R")
@@ -131,6 +137,11 @@ ClickUntilGone(x, y, textToFind, time := 100, offsetX := 0, offsetY := 0,
         }
         Sleep time
     }
+}
+
+GetChallengeReady() {
+    challengWin := IniRead(pathCongif, "Challenge", "NextTime")
+    return DateDiff(challengWin, A_Now, 'M')
 }
 
 IFindText(Text, time := 0) {

@@ -13,7 +13,7 @@ qwe.BackColor := "0e0606"
 WinSetTransColor("0e0606", qwe)
 
 ToolTip(menuTooltip, A_ScreenWidth - 170, 45)
-SetTimer () => !ToolTip() ? ToolTip() : '', -5000
+; SetTimer () => !ToolTip() ? ToolTip() : '', -5000
 qwe.Show("x" A_ScreenWidth - 100 " y30")
 OnMenu() {
     qwe.unitbtn.Visible := !qwe.unitbtn.Visible
@@ -33,6 +33,7 @@ eq.AddGroupBox('xm Section w386 h72', 'Option')
 eq.AddCheckbox('xs+10 ys+25 vNextLevel', 'Next Level')
 eq.AddCheckbox('x+0 vLobbyReturn', 'Lobby Return')
 eq.AddCheckbox('x+0 vMatchMaking', 'MatchMaking')
+eq.AddCheckbox('x+0 vUpgradeDuring', 'Upgrade during place')
 eq.AddCheckbox('xs+10 yp+25 vAutoAbility', 'Auto Ability')
 eq.AddCheckbox('x+0 vAutoChallenge', 'Auto Challenge')
 eq.AddCheckbox('x+0 vSwitchUpgrade', 'Switch Upgrade')
@@ -68,7 +69,7 @@ eq.AddDDL('vPlaceSpeed', placeSpeed)
 eq.AddDDL('x+8 vPlaceType', placeTpye)
 toggleEQ() {
     WinExist('ahk_id' eq.Hwnd) ?
-        eq.Hide() : eq.Show()
+        eq.Hide() : eq.Show('x900')
 }
 ModeChange() {
     ddl := eq.mapDropdown.Gui['Map']
@@ -86,7 +87,7 @@ ModeChange() {
         ddl.Choose(1)
     }
 }
-
+;==============================================================================
 PCS := Gui("+AlwaysOnTop +Owner" qwe.Hwnd)
 PCS.SetFont("s10 bold", "Segoe UI")
 PCS.MarginX := 20

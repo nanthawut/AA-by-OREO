@@ -1,8 +1,8 @@
 #Requires AutoHotkey v2.0
 
-
 HandleContractJoin() {
-
+    selectedPage := i.Map
+    joinType := i.Type
     ; Handle 4-5 Page pattern selection
     if (selectedPage = "Page 4-5") {
         selectedPage := GetContractPage()
@@ -94,7 +94,65 @@ HandleContractJoin() {
     return true
 }
 
+PlayHere() {
+    IClick(400, 435, 300)
+    IClick(330, 325, 300)
+    IClick(400, 465, 300)
+}
+
+SelectMenu() {
+    if (challengeReady || i.Mode = "Challenge"|| i.Mode = "Portal") {
+        return
+    }
+    SendInput("{\}")
+    if (i.Mode = "Legend") {
+        Sleep(500)
+        SendInput("{Down}")
+        Sleep(500)
+        SendInput("{Enter}")
+    }
+
+    Map := StrReplace(i.Map, " ", "_")
+    Type := StrReplace(i.Type, " ", "_")
+    loop getCountMode.Map.%i.Mode%.%Map% {
+        SendInput("{Down}")
+        Sleep(200)
+    }
+
+    SendInput("{Enter}")
+    Sleep(500)
+
+    loop 4 {
+        SendInput("{Up}")
+        Sleep(200)
+    }
+
+    SendInput("{Left}")
+    Sleep(1000)
+
+    actArrows := getCountMode.%i.Mode%.%Type% ; Act selection down arrows
+    loop actArrows {
+        SendInput("{Down}")
+        Sleep(200)
+    }
+
+    SendInput("{Enter}") ; Select Act
+    Sleep(500)
+    SendInput("{\}")
+}
+
 MoveTo() {
+    if (i.Mode = 'Portal')
+        return
+    if (challengeReady || i.Mode = "Challenge") {
+        IClick(765, 475, 500)
+        IClick(300, 415)
+        SendInput ("{a down}")
+        sleep (7000)
+        SendInput ("{a up}")
+        AddLog("Moving to position for Challenge")
+        return
+    }
     AddLog("Moving to position for " i.Mode)
     switch i.Mode {
         case "Story", "Legend":
@@ -147,7 +205,7 @@ MoveTo() {
             sleep (4000)
             SendInput ("{s up}")
         case "Winter_Event":
-            IClick(592, 204, 200) 
+            IClick(592, 204, 200)
             IClick(85, 295, 1000)
             SendInput ("{a up}")
             Sleep 100

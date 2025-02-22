@@ -1,6 +1,6 @@
 #Requires AutoHotkey v2.0
 
-PlacingUnits(wSlot, state?) {
+PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
     GetForm()
     pointCounts := Map()
 
@@ -21,7 +21,7 @@ PlacingUnits(wSlot, state?) {
         }
         if CheckForXp()
             return MonitorStage()
-        placements := state = "f" ? Integer(placements) : Integer(maxUnit) - placedCounts
+        placements := state = 1 ? Integer(placements) : Integer(maxUnit) - placedCounts
         ; If enabled, place all units for this slot
         if (placements > 0) {
 
@@ -63,15 +63,14 @@ PlacingUnits(wSlot, state?) {
                         successfulCoordinates.Push({ x: point.x, y: point.y, slot: slotNum, maxLevel: false })
                         placedCounts++
                         AddLog("Placed Unit " slotNum " (" placedCounts "/" placements ")")
-                        CheckAbility(point.x, point.y)
                         IClick(560, 560) ; Move Click
                         CheckForCardSelection()
 
                         break
                     }
                     Reconnect()
-                    if (successfulCoordinates.length > 8) {
-                        UpgradeUnits("m", true)
+                    if (i.UpgradeDuring) {
+                        UpgradeUnits(2, true)
                     }
                 }
             }
@@ -85,6 +84,7 @@ PlacingUnits(wSlot, state?) {
 
 UpgradeUnits(state, oneTick) {
     global successfulCoordinates
+    GetForm()
     totalUnits := Map()
     upgradedCount := Map()
     hasSuccessAll := true
@@ -156,7 +156,7 @@ UpgradeUnits(state, oneTick) {
             }
         }
     }
-    if (state = "l") {
+    if (state = 0) {
         AddLog("Priority upgrading completed")
     }
     return
@@ -165,6 +165,8 @@ UpgradeUnits(state, oneTick) {
 RestartStage() {
     GetForm()
     moveRobloxWindow()
+    if (challengeReady || i.Mode = "Challenge")
+        global inChallengeMode := true
     currentMap := DetectMap()
 
     ; Wait for loading
@@ -181,15 +183,14 @@ RestartStage() {
 
     ; Begin unit placement and management
     loop 6 {
-
         txt := 'Enable' A_Index
         txt := i.%txt%
         if (txt) {
             firstplace.Push(A_Index)
         }
     }
-    PlacingUnits(firstplace, "f")
-    PlacingUnits([1, 2, 3, 4, 5, 6], "l")
+    PlacingUnits(1, firstplace)
+    PlacingUnits("l")
 
     ; Monitor stage progress
     MonitorStage()
@@ -205,7 +206,6 @@ MonitorEndScreen() {
         }
 
         IClick(560, 560)
-        IClick(560, 560)
 
         if (IFindText(UnitExit)) {
             ClickUntilGone(0, 0, UnitExit, 500, -1, -35)
@@ -216,28 +216,60 @@ MonitorEndScreen() {
         }
 
         ; Now handle each mode
-        if (IFindText(LobbyText) or (IFindText(LobbyText2))) {
+        if (IFindText(LobbyText)) {
             AddLog("Found Lobby Text - Current Mode: " (inChallengeMode ? "Challenge" : i.Mode))
             Sleep(2000)
 
             ; Challenge mode logic first
             if (inChallengeMode) {
+                if (GetChallengeReady() < 0) {
+                    AddLog("30 minutes passed - switching to Challenge mode")
+                }
                 AddLog("Challenge completed - returning to " i.Mode " mode")
                 inChallengeMode := false
                 challengeStartTime := A_TickCount
-                ClickUntilGone(0, 0, LobbyText, , -1, -35, LobbyText2)
+                ClickUntilGone(0, 0, LobbyText, , 0, -35)
                 return CheckLobby()
             }
 
             ; Check if it's time for challenge mode
             if (!inChallengeMode && i.AutoChallenge) {
-                timeElapsed := A_TickCount - challengeStartTime
-                if (timeElapsed >= 1800000) {
-                    AddLog("30 minutes passed - switching to Challenge mode")
-                    inChallengeMode := true
-                    challengeStartTime := A_TickCount
-                    ClickUntilGone(0, 0, LobbyText, , -1, -35, LobbyText2)
-                    return CheckLobby()
+                try {
+                    if (GetChallengeReady() < 0) {
+                        AddLog("30 minutes passed - switching to Challenge mode")
+                    }
+                }
+                inChallengeMode := false
+                ClickUntilGone(0, 0, LobbyText, , 0, -35)
+                return CheckLobby()
+            }
+
+            if (i.Mode = "Portal") {
+                if (i.Type = "Creating") {
+                    IClick(485, 120, 1500) ;Select New Portal
+                    IClick(510, 190, 1500) ; Click search
+                    SendInput(i.Map)
+                    IClick(215, 285, 1500)  ; Click On Portal
+                    if (ok := IFindText(selectText)) {
+                        IClick(ok[1].x - 20, ok[1].y - 20)
+                    }
+                } else {
+                    AddLog("Waiting for next portal")
+                }
+                return RestartStage()
+            }
+            if (i.Mode = "Contract") {
+                if (i.LobbyReturn) {
+                    AddLog("Contract complete - returning to lobby")
+                    Sleep(1500)
+                    ClickUntilGone(0, 0, LobbyText, 0, -35)
+                    CheckLobby()
+                    return StartSelectedMode()
+                } else {
+                    AddLog("Starting next contract")
+                    Sleep(1500)
+                    ClickUntilGone(0, 0, LobbyText, +120, -35)
+                    return HandleNextContract()
                 }
             }
 
@@ -246,14 +278,14 @@ MonitorEndScreen() {
                 if (i.Map != "Infinity") {
                     if (i.NextLevel && lastResult = "win") {
                         AddLog("Next level")
-                        ClickUntilGone(0, 0, LobbyText, , +260, -35, LobbyText2)
+                        ClickUntilGone(0, 0, LobbyText, , +260, -35)
                     } else {
                         AddLog("Replay level")
-                        ClickUntilGone(0, 0, LobbyText, , +120, -35, LobbyText2)
+                        ClickUntilGone(0, 0, LobbyText, , +120, -35)
                     }
                 } else {
                     AddLog("Story Infinity replay")
-                    ClickUntilGone(0, 0, LobbyText, , +120, -35, LobbyText2)
+                    ClickUntilGone(0, 0, LobbyText, , +120, -35)
                 }
                 return RestartStage()
             }
@@ -261,11 +293,11 @@ MonitorEndScreen() {
                 AddLog("Handling Raid end")
                 if (i.LobbyReturn) {
                     AddLog("Return to lobby")
-                    ClickUntilGone(0, 0, LobbyText, , -1, -35, LobbyText2)
+                    ClickUntilGone(0, 0, LobbyText, , 0, -35,)
                     return CheckLobby()
                 } else {
                     AddLog("Replay raid")
-                    ClickUntilGone(0, 0, LobbyText, , +120, -35, LobbyText2)
+                    ClickUntilGone(0, 0, LobbyText, , +120, -35)
                     return RestartStage()
                 }
             }
@@ -273,31 +305,32 @@ MonitorEndScreen() {
                 AddLog("Handling Infinity Castle end")
                 if (lastResult = "win") {
                     AddLog("Next floor")
-                    ClickUntilGone(0, 0, LobbyText, , +120, -35, LobbyText2)
+                    ClickUntilGone(0, 0, LobbyText, , +120, -35)
                 } else {
                     AddLog("Restart floor")
-                    ClickUntilGone(0, 0, LobbyText, , +120, -35, LobbyText2)
+                    ClickUntilGone(0, 0, LobbyText, , +120, -35)
                 }
                 return RestartStage()
             }
             else if (i.Mode = "Cursed Womb") {
                 AddLog("Handling Cursed Womb End")
                 AddLog("Returning to lobby")
-                ClickUntilGone(0, 0, LobbyText, , -1, -35, LobbyText2)
+                ClickUntilGone(0, 0, LobbyText, , 0, -35)
                 return CheckLobby()
             }
             else {
                 AddLog("Handling end case")
                 if (i.LobbyReturn) {
                     AddLog("Return to lobby enabled")
-                    ClickUntilGone(0, 0, LobbyText, , -1, -35, LobbyText2)
+                    ClickUntilGone(0, 0, LobbyText, , 0, -35)
                     return CheckLobby()
                 } else {
                     AddLog("Replaying")
-                    ClickUntilGone(0, 0, LobbyText, , +120, -35, LobbyText2)
+                    ClickUntilGone(0, 0, LobbyText, , +120, -35)
                     return RestartStage()
                 }
             }
+
         }
 
         Reconnect()
@@ -341,26 +374,19 @@ MonitorStage() {
             if (IFindText(VictoryText)) {
                 AddLog("Victory detected - Stage Length: " stageLength)
                 Wins++
-
-                if (i.Mode = "Portal") {
-                    return HandlePortalEnd()
-                } else if (i.Mode = "Contract") {
-                    return HandleContractEnd()
-                } else {
-                    return MonitorEndScreen()
+                AddLog('Total Stats  Wins: ' Wins '  Lose: ' loss)
+                if (challengeReady || inChallengeMode) {
+                    IniWrite(DateAdd(A_Now, 30 - FormatTime(A_Now, 'mm'), 'M'), pathCongif, 'Challenge', 'NextTime')
+                    AddLog("Save next time Challege")
                 }
+                return MonitorEndScreen()
             }
             else if (IFindText(DefeatText)) {
                 AddLog("Defeat detected - Stage Length: " stageLength)
                 loss++
                 ; SendWebhookWithTime(false, stageLength)
-                if (i.Mode = "Portal") {
-                    return HandlePortalEnd()
-                } else if (i.Mode = "Contract") {
-                    return HandleContractEnd()
-                } else {
-                    return MonitorEndScreen()
-                }
+                AddLog('Total Stats  Wins: ' Wins '  Lose: ' loss)
+                return MonitorEndScreen()
             }
         }
         Reconnect()
@@ -380,7 +406,7 @@ CheckForXp() {
 CheckAbility(x?, y?) {
     global unitBuff, buffTime
     if (i.AutoAbility) {
-        cd := [0, 23050, 7000, 7000]
+        cd := [0, 23200, 7000, 7000]
         if (IFindText(AutoOff) && x && y && unitBuff.Length < 4) {
             unitBuff.Push({ x: x, y: y, num: unitBuff.Length + 2, cd: cd[unitBuff.Length + 1], on: false })
             AddLog("Ability Add " unitBuff.Length)
@@ -391,6 +417,7 @@ CheckAbility(x?, y?) {
             for start IN [1, 3, 2, 4] {
                 while (!unitBuff[start].on) {
                     CheckForCardSelection()
+                    UpgradeUnits(2, true)
                     if (unitBuff[start].cd <= A_TickCount - buffTime) {
                         IClick(unitBuff[start].x, unitBuff[start].y)
                         if (IFindText(AutoOff)) {
@@ -405,8 +432,10 @@ CheckAbility(x?, y?) {
 
             }
         }
+        return true
 
     }
+    return false
 }
 
 Reconnect() {
@@ -443,66 +472,6 @@ Reconnect() {
     }
 }
 
-HandleContractEnd() {
-    global inChallengeMode
-    GetForm()
-    loop {
-        Sleep(3000)
-
-        ; Click to claim any drops/rewards
-        IClick(560, 560)
-
-        if (IFindText(UnitExit)) {
-            ClickUntilGone(0, 0, UnitExit, -4, -35)
-        }
-
-        if (IFindText(NextText)) {
-            ClickUntilGone(0, 0, NextText, 0, -40)
-        }
-
-        ; Check for both lobby texts
-        if (IFindText(LobbyText) or (IFindText(LobbyText2))) {
-            AddLog("Found Lobby Text - proceeding with contract end options")
-            Sleep(2000)  ; Wait for UI to settle
-
-            if (inChallengeMode) {
-                AddLog("Challenge completed - returning to selected mode")
-                inChallengeMode := false
-                challengeStartTime := A_TickCount
-                Sleep(1500)
-                ClickUntilGone(0, 0, LobbyText, 0, -35, LobbyText2)
-                return CheckLobby()
-            }
-
-            if (!inChallengeMode && i.AutoChallenge) {
-                timeElapsed := A_TickCount - challengeStartTime
-                if (timeElapsed >= 1800000) {  ; 30 minutes in milliseconds
-                    AddLog("30 minutes passed - switching to Challenge mode")
-                    inChallengeMode := true
-                    challengeStartTime := A_TickCount
-                    Sleep(1500)
-                    ClickUntilGone(0, 0, LobbyText, 0, -35, LobbyText2)
-                    return CheckLobby()
-                }
-            }
-
-            if (i.LobbyReturn) {
-                AddLog("Contract complete - returning to lobby")
-                Sleep(1500)
-                ClickUntilGone(0, 0, LobbyText, 0, -35, LobbyText2)
-                CheckLobby()
-                return StartSelectedMode()
-            } else {
-                AddLog("Starting next contract")
-                Sleep(1500)
-                ClickUntilGone(0, 0, LobbyText, +120, -35, LobbyText2)
-                return HandleNextContract()
-            }
-        }
-        Reconnect()
-    }
-}
-
 PlaceUnit(x, y, slot := 1) {
     SendInput(slot)
     Sleep 50
@@ -510,10 +479,16 @@ PlaceUnit(x, y, slot := 1) {
     Sleep 50
     SendInput("q")
 
-    if UnitPlaced() {
+    if (IFindText(UpgradeText, PlacementSpeed())) {
+        AddLog("Unit Placed Successfully")
+
+        if (CheckAbility(x, y))
+            IClick(x, y)
         IClick(325, 185)
         return true
     }
+    if (CheckAbility(x, y))
+        IClick(x, y)
     return false
 }
 
@@ -528,20 +503,7 @@ MaxUpgrade() {
 CheckEndAndRoute() {
     if (IFindText(LobbyText)) {
         AddLog("Found end screen")
-        if (i.Mode = "Contract") {
-            return HandleContractEnd()
-        } else {
-            return MonitorEndScreen()
-        }
-    }
-    return false
-}
-
-UnitPlaced() {
-    if (IFindText(UpgradeText, PlacementSpeed())) {
-        AddLog("Unit Placed Successfully")
-        ; close upg menu
-        return true
+        return MonitorEndScreen()
     }
     return false
 }
@@ -747,48 +709,6 @@ cardSelector() {
         }
     }
     AddLog("Failed to pick a card")
-}
-
-HandlePortalEnd() {
-
-    loop {
-        Sleep(3000)
-
-        IClick(560, 560)
-
-        if (IFindText(UnitExit)) {
-            ClickUntilGone(0, 0, UnitExit, -4, -35)
-        }
-
-        if (IFindText(NextText)) {
-            ClickUntilGone(0, 0, NextText, 0, -40)
-        }
-
-        if (IFindText(LobbyText) or (IFindText(LobbyText2))) {
-            AddLog("Found Lobby Text - creating/joining new portal")
-            Sleep(2000)
-
-            if (i.Type = "Creating") {
-                IClick(485, 120) ;Select New Portal
-                Sleep(1500)
-                IClick(510, 190) ; Click search
-                Sleep(1500)
-                SendInput(i.Map)
-                Sleep(1500)
-                IClick(215, 285)  ; Click On Portal
-                Sleep (1500)
-                FindText(selectText).Click(-20, -20)
-                Sleep(5000)
-            } else {
-                AddLog("Waiting for next portal")
-                Sleep(5000)
-            }
-            return RestartStage()
-        }
-
-        Reconnect()
-        CheckEndAndRoute()
-    }
 }
 
 GenerateCirclePoints() {
