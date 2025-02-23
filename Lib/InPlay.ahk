@@ -1,7 +1,7 @@
 #Requires AutoHotkey v2.0
 
 PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
-    global tempPlace, cdtemp
+    global tempPlace
     GetForm()
     pointCounts := Map()
 
@@ -28,7 +28,6 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
 
             ; Place all units for this slot
             while (placedCounts < placements) {
-                countTemp := 0
                 for point in placementPoints {
 
                     ; CheckAbility()
@@ -62,68 +61,47 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
                     CheckForCardSelection()
                     pointCounts[strPoint]++
 
-                    countTemp++
                     SendInput(slotNum)
                     Sleep 50
-                    IClick(point.x, point.y)
-                    Sleep 50
-                    SendInput("q")
-                    tempPlace.Push({ x: point.x, y: point.y, slot: slotNum, add: false })
-                    cdtick := A_TickCount
-                    if (ok := IFindText(UpgradeText, cdtemp) || countTemp = placements - placedCounts) {
-                        cdticked := A_TickCount - cdtick
-                        if (ok) {
-                            AddLog('Time check place ' cdticked 'ms.')
-                            if (cdticked < cdtemp && cdtemp - (cdticked) > 100) {
-                                cdtemp := cdticked - Mod(cdticked, 100) + Round(cdticked / 100)
-                            }
-                        }
-                        countTemp := 0
-                        l := tempPlace.Length
-                        loop tempPlace.Length {
-                            if (tempPlace[l].add) {
-                                break
-                            }
+                    MouseMove(point.x, point.y)
+                    Sleep 500
+                    pressQ := false
+                    if (!IFindText(cantPlace)) {
+                        placeTime := A_TickCount
+                        loop {
                             CheckForCardSelection()
-                            IClick(560, 560)
-                            IClick(tempPlace[l].x, tempPlace[l].y, 0)
-
-                            if (IFindText(UpgradeText, 500)) {
-                                if (!ok && cdtemp < PlacementSpeed())
-                                    cdtemp += 100
-
-                                successfulCoordinates.Push({ x: tempPlace[l].x, y: tempPlace[l].y, slot: tempPlace[l].slot,
-                                    maxLevel: CheckAbility(tempPlace[l].x, tempPlace[l].y) })
-                                tempPlace[l].add := true
+                            SendInput(slotNum)
+                            IClick(point.x, point.y, 0)
+                            SendInput("q")
+                            IClick(point.x, point.y)
+                            Sleep 50
+                            if (ok := IFindText(UpgradeText)) {
+                                successfulCoordinates.Push({ x: point.x, y: point.y, slot: slotNum,
+                                    maxLevel: CheckAbility(point.x, point.y) })
                                 AddLog("Unit Placed Successfully")
                                 placedCounts++
                                 AddLog("Placed Unit " slotNum " (" placedCounts "/" placements ")")
+                                SendInput("q")
                                 IClick(560, 560) ; Move Click
-                                CheckForCardSelection()
-                                if (placedCounts = placements) {
-                                    tempPlace := []
-                                    break
-                                }
+
+                                break
                             }
-                            l--
-                        }
-                        if(ok){
-                            tempPlace := []
-                        }
-                        if (placedCounts = placements) {
-                            tempPlace := []
+                            SendInput("q")
+                            if (A_TickCount - placeTime > 10000) {
+                                break
+                            }
                         }
                         break
                     }
-                    IClick(560, 560) ;
-                    Reconnect()
-                    if (i.UpgradeDuring) {
-                        UpgradeUnits(2, true)
-                    }
                 }
-            }
 
+            }
+            Reconnect()
+            if (i.UpgradeDuring) {
+                UpgradeUnits(2, true)
+            }
         }
+
     }
 
     AddLog("All units placed to requested amounts")
@@ -412,7 +390,7 @@ MonitorStage() {
 
             ; Calculate stage end time here, before checking win/loss
             stageEndTime := A_TickCount
-            try{
+            try {
                 stageLength := FormatStageTime(stageEndTime - stageStartTime)
             }
 
@@ -422,7 +400,7 @@ MonitorStage() {
 
             ; Check for Victory or Defeat
             if (IFindText(VictoryText)) {
-                try{
+                try {
                     AddLog("Victory detected - Stage Length: " stageLength)
                 }
                 Wins++
@@ -442,7 +420,7 @@ MonitorStage() {
                 return MonitorEndScreen()
             }
             else if (IFindText(DefeatText)) {
-                try{
+                try {
                     AddLog("Defeat detected - Stage Length: " stageLength)
                 }
                 loss++
@@ -661,11 +639,11 @@ CheckForCardSelection() {
 cardSelector() {
     AddLog("Picking card in priority order")
     if (IFindText(UnitExistence)) {
-        IClick(329, 184) ; close upg menu
+        IClick(560, 560) ; close upg menu
         sleep 100
     }
 
-    IClick(59, 572) ; Untarget Mouse
+    ; IClick(59, 572) ; Untarget Mouse
     sleep 100
     list := []
     loop 19 {
@@ -874,12 +852,12 @@ GenerateGridPoints() {
     return points
 }
 
-GenerateMoreGridPoints(gridWidth := 5) {  ; Adjust grid width (must be an odd number)
+GenerateMoreGridPoints(gridWidth := 5, x := 0, y := 0) {  ; Adjust grid width (must be an odd number)
     points := []
     gridSize := 30  ; Space between points
 
-    centerX := GetWindowCenter(rblxID).x
-    centerY := GetWindowCenter(rblxID).y
+    centerX := x ? x : GetWindowCenter(rblxID).x
+    centerY := y ? y : GetWindowCenter(rblxID).y
 
     directions := [[1, 0], [0, 1], [-1, 0], [0, -1]]  ; Right, Down, Left, Up (1-based index)
 

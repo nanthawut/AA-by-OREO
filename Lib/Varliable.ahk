@@ -12,7 +12,6 @@ Wins := 0
 loss := 0
 unitBuff := []
 buffTime := 0
-cdtemp := 500
 slotU := ['1', '2', '3', '4', '5', '6']
 i := Map()
 placeSpeed := ["2.25 sec", "1.5 sec", "2 sec", "2.5 sec", "2.75 sec", "3 sec"]

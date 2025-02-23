@@ -1,5 +1,9 @@
 #Requires AutoHotkey v2.0
 
+
+cantPlace:="|<>##0.97$0/0/8F1932,0/1/7E2140,0/2/732549"
+cantPlace.="|<>##0.98$0/0/FFD5FF,1/-1/FFD6FF,0/-1/E3B9EF"
+
 AreaText := "|<>*109$36.szzzzzszyzzzkM8A27mM842LU8k0W7U8k8X770sA07DZwC27zzzzzzzzzzzzU"
 ModeCancel :=
     "|<>*134$70.zzzzzzzzzzzzzzzzzzzzzzzzwDzzzzzzzszz0DzzzzzzzXzs0TzzzzzzyDz01zzzzzzzszsDDzzzznz7XzVzw0k3w3k6DyDzU307U60Mzszw0A0A0kEXzXzkkkkkz72DyDz737X7w08zsTwQASATk1XzkMk0lsk33y7z01037X040MDy060ASC0M1Uzy1y8lsy7k73zzzzzzzzzzzzU"

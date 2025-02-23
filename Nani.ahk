@@ -26,7 +26,37 @@ ModeChange()
 loadSetting()
 ProG.Show('x' A_ScreenWidth - 400 ' y' 45)
 tester() {
-    
+    moveRobloxWindow()
+    ; mouse := []
+    ; SendInput('1')
+    ; for point in GenerateMoreGridPoints(5) {
+    ;     MouseMove(point.x, point.y)
+    ;     if (IFindText(canPlace) && !IFindText(cantPlace)) {
+    ;         mouse.Push(point)
+    ;     }
+    ;     ; CoordMode('Mouse', 'Screen')
+    ; }
+    ; SendInput('q')
+    ; scan := { Text: '' }
+
+    ; scan := OCR.FromRect(355, 520, 76, 40, "FirstFromAvailableLanguages", {
+    ;     grayscale: true,
+    ;     scale: 2.0
+    ; })
+    ; loop {
+    ;     if (StrLen(RegExReplace(scan.Text, "[^\d]")) = StrLen(scan.Text) && StrLen(scan.Text) != 0)
+    ;         break
+    ;     scan := OCR.FromRect(355, 520, 76, 40, "FirstFromAvailableLanguages", {
+    ;         grayscale: true,
+    ;         scale: 2.0
+    ;     })
+    ; }
+    ; AddLog(scan.Text ' [[]] ' StrLen(RegExReplace(scan.Text, "[^\d]")) '  [[[]]] ' StrLen(scan.Text))
+    ; for value IN mouse {
+    ;     SendInput('1')
+    ;     IClick(value.x, value.y)
+    ;     SendInput('q')
+    ; }
     PlacingUnits(1, [1, 2, 3, 4])
 }
 
