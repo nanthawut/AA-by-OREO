@@ -101,7 +101,7 @@ PlayHere() {
 }
 
 SelectMenu() {
-    if (challengeReady || i.Mode = "Challenge"|| i.Mode = "Portal") {
+    if (challengeReady || i.Mode = "Challenge"|| i.Mode = "Portal"|| i.Mode = "Winter_Event") {
         return
     }
     SendInput("{\}")

@@ -1,6 +1,7 @@
 #Requires AutoHotkey v2.0
 
 PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
+    global tempPlace, cdtemp
     GetForm()
     pointCounts := Map()
 
@@ -9,8 +10,8 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
             i.PlaceType = "Up and Down" ? GenerateUpandDownPoints() : GenerateRandomPoints()
     slotNumCheck := 0
     ; Go through each slot
+    tempPlace := []
     for slotNum in wSlot {
-
         ; Get number of placements wanted for this slot
         placements := i.%'Placement' slotNum%
         maxUnit := i.%'maxUnit' slotNum%
@@ -27,8 +28,10 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
 
             ; Place all units for this slot
             while (placedCounts < placements) {
+                countTemp := 0
                 for point in placementPoints {
-                    CheckAbility()
+
+                    ; CheckAbility()
                     strPoint := "" point.x point.y
 
                     ; Skip if this coordinate was already used successfully
@@ -59,15 +62,60 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
                     CheckForCardSelection()
                     pointCounts[strPoint]++
 
-                    if PlaceUnit(point.x, point.y, slotNum) {
-                        successfulCoordinates.Push({ x: point.x, y: point.y, slot: slotNum, maxLevel: false })
-                        placedCounts++
-                        AddLog("Placed Unit " slotNum " (" placedCounts "/" placements ")")
-                        IClick(560, 560) ; Move Click
-                        CheckForCardSelection()
+                    countTemp++
+                    SendInput(slotNum)
+                    Sleep 50
+                    IClick(point.x, point.y)
+                    Sleep 50
+                    SendInput("q")
+                    tempPlace.Push({ x: point.x, y: point.y, slot: slotNum, add: false })
+                    cdtick := A_TickCount
+                    if (ok := IFindText(UpgradeText, cdtemp) || countTemp = placements - placedCounts) {
+                        cdticked := A_TickCount - cdtick
+                        if (ok) {
+                            AddLog('Time check place ' cdticked 'ms.')
+                            if (cdticked < cdtemp && cdtemp - (cdticked) > 100) {
+                                cdtemp := cdticked - Mod(cdticked, 100) + Round(cdticked / 100)
+                            }
+                        }
+                        countTemp := 0
+                        l := tempPlace.Length
+                        loop tempPlace.Length {
+                            if (tempPlace[l].add) {
+                                break
+                            }
+                            CheckForCardSelection()
+                            IClick(560, 560)
+                            IClick(tempPlace[l].x, tempPlace[l].y, 0)
 
+                            if (IFindText(UpgradeText, 500)) {
+                                if (!ok && cdtemp < PlacementSpeed())
+                                    cdtemp += 100
+
+                                successfulCoordinates.Push({ x: tempPlace[l].x, y: tempPlace[l].y, slot: tempPlace[l].slot,
+                                    maxLevel: CheckAbility(tempPlace[l].x, tempPlace[l].y) })
+                                tempPlace[l].add := true
+                                AddLog("Unit Placed Successfully")
+                                placedCounts++
+                                AddLog("Placed Unit " slotNum " (" placedCounts "/" placements ")")
+                                IClick(560, 560) ; Move Click
+                                CheckForCardSelection()
+                                if (placedCounts = placements) {
+                                    tempPlace := []
+                                    break
+                                }
+                            }
+                            l--
+                        }
+                        if(ok){
+                            tempPlace := []
+                        }
+                        if (placedCounts = placements) {
+                            tempPlace := []
+                        }
                         break
                     }
+                    IClick(560, 560) ;
                     Reconnect()
                     if (i.UpgradeDuring) {
                         UpgradeUnits(2, true)
@@ -121,7 +169,7 @@ UpgradeUnits(state, oneTick) {
 
                     if (!coord.maxLevel) {
                         CheckForCardSelection()
-                        CheckAbility()
+                        ; CheckAbility()
                         UpgradeUnit(coord.x, coord.y)
                         unitFinish := false
                         if MaxUpgrade() {
@@ -180,7 +228,7 @@ RestartStage() {
 
     ; Wait for game to actually start
     StartedGame()
-
+    Sleep 1000
     ; Begin unit placement and management
     loop 6 {
         txt := 'Enable' A_Index
@@ -364,7 +412,9 @@ MonitorStage() {
 
             ; Calculate stage end time here, before checking win/loss
             stageEndTime := A_TickCount
-            stageLength := FormatStageTime(stageEndTime - stageStartTime)
+            try{
+                stageLength := FormatStageTime(stageEndTime - stageStartTime)
+            }
 
             if (IFindText(UnitExit)) {
                 ClickUntilGone(0, 0, UnitExit, , -1, -35)
@@ -372,17 +422,29 @@ MonitorStage() {
 
             ; Check for Victory or Defeat
             if (IFindText(VictoryText)) {
-                AddLog("Victory detected - Stage Length: " stageLength)
+                try{
+                    AddLog("Victory detected - Stage Length: " stageLength)
+                }
                 Wins++
                 AddLog('Total Stats  Wins: ' Wins '  Lose: ' loss)
                 if (challengeReady || inChallengeMode) {
-                    IniWrite(DateAdd(A_Now, 30 - FormatTime(A_Now, 'mm'), 'M'), pathCongif, 'Challenge', 'NextTime')
+                    sst := DateAdd(A_Now, FormatTime(A_Now, 'ss') * 2 - FormatTime(A_Now, 'ss'), 'S')
+                    mmt := 30 - FormatTime(sst, 'mm')
+                    if mmt < 1 {
+                        mmt += 30
+                    } else {
+                        mmt := 30 - FormatTime(sst, 'mm')
+                    }
+                    mmt := DateAdd(sst, mmt, 'M')
+                    IniWrite(mmt, pathCongif, 'Challenge', 'NextTime')
                     AddLog("Save next time Challege")
                 }
                 return MonitorEndScreen()
             }
             else if (IFindText(DefeatText)) {
-                AddLog("Defeat detected - Stage Length: " stageLength)
+                try{
+                    AddLog("Defeat detected - Stage Length: " stageLength)
+                }
                 loss++
                 ; SendWebhookWithTime(false, stageLength)
                 AddLog('Total Stats  Wins: ' Wins '  Lose: ' loss)
@@ -407,9 +469,11 @@ CheckAbility(x?, y?) {
     global unitBuff, buffTime
     if (i.AutoAbility) {
         cd := [0, 23200, 7000, 7000]
-        if (IFindText(AutoOff) && x && y && unitBuff.Length < 4) {
+        found := false
+        if (IFindText(AutoOff) && unitBuff.Length < 4) {
             unitBuff.Push({ x: x, y: y, num: unitBuff.Length + 2, cd: cd[unitBuff.Length + 1], on: false })
             AddLog("Ability Add " unitBuff.Length)
+            found := true
         }
 
         if (unitBuff.Length = 4) {
@@ -432,7 +496,7 @@ CheckAbility(x?, y?) {
 
             }
         }
-        return true
+        return found
 
     }
     return false
@@ -470,26 +534,6 @@ Reconnect() {
             }
         }
     }
-}
-
-PlaceUnit(x, y, slot := 1) {
-    SendInput(slot)
-    Sleep 50
-    IClick(x, y)
-    Sleep 50
-    SendInput("q")
-
-    if (IFindText(UpgradeText, PlacementSpeed())) {
-        AddLog("Unit Placed Successfully")
-
-        if (CheckAbility(x, y))
-            IClick(x, y)
-        IClick(325, 185)
-        return true
-    }
-    if (CheckAbility(x, y))
-        IClick(x, y)
-    return false
 }
 
 MaxUpgrade() {
@@ -1131,15 +1175,15 @@ FindAndClickColor(targetColor?, searchArea := [0, 0, GetWindowCenter(rblxID).Wid
 
 MoveForHauntedAcademy() {
     color := PixelGetColor(647, 187)
-    ; if (!IsColorInRange(color, 0xFDF0B3)) {
-    ;     SendInput ("{s down}")
-    ;     sleep (3500)
-    ;     SendInput ("{s up}")
-    ; } else {
-    SendInput ("{d down}")
-    sleep (3500)
-    SendInput ("{d up}")
-    ; }
+    if (!IsColorInRange(color, 0xFDF0B3)) {
+        SendInput ("{s down}")
+        sleep (3500)
+        SendInput ("{s up}")
+    } else {
+        SendInput ("{d down}")
+        sleep (3500)
+        SendInput ("{d up}")
+    }
 }
 
 MoveForSpaceCenter() {

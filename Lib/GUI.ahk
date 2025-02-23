@@ -12,7 +12,6 @@ qwe.exitbtn.OnEvent('Click', (*) => ExitApp())
 qwe.BackColor := "0e0606"
 WinSetTransColor("0e0606", qwe)
 
-ToolTip(menuTooltip, A_ScreenWidth - 170, 45)
 ; SetTimer () => !ToolTip() ? ToolTip() : '', -5000
 qwe.Show("x" A_ScreenWidth - 100 " y30")
 OnMenu() {
@@ -116,3 +115,17 @@ PCS.Add("Radio", "x54 y630 w120 h23 Checked", "Random Tier")
 PCS.Add("Radio", "x54 y655 w120 h23 vHeighest", "Highest Tier")
 PCS.Add("Text", "x12 x54 y680 w180 +BackgroundTrans", "Random = Pick any")
 PCS.Add("Text", "x12 x54 y700 w180 +BackgroundTrans", "Highest = Tier 3>2>1")
+
+;==============================================================================
+
+ProG := Gui("+AlwaysOnTop -Caption +Owner" qwe.Hwnd)
+ProG.Title := "Process Na ja. :P"
+ProG.BackColor := '0e0606'
+WinSetTransColor("0e0606", ProG)
+ProG.SetFont("s11", "Segoe UI")
+font := "16f306"
+ProG.Process := ProG.AddEdit('w300 r10 ReadOnly Background1f1f1f c' font, menuTooltip)
+toggleProg() {
+    WinExist('ahk_id' ProG.Hwnd) ?
+        ProG.Hide() : ProG.Show('x' A_ScreenWidth - 400 ' y' 45)
+}

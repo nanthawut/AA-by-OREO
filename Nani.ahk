@@ -15,6 +15,7 @@ RegisterHotkey() {
     Hotkey(hotKeySetting[2], (*) => StartSelectedMode())
     Hotkey(hotKeySetting[3], (*) => Reload())
     Hotkey(hotKeySetting[4], (*) => TogglePause())
+    Hotkey(hotKeySetting[5], (*) => toggleProg())
     Hotkey(hotKeySetting[6], (*) => tester())
     return
 }
@@ -23,9 +24,10 @@ RegisterHotkey()
 loadSetting()
 ModeChange()
 loadSetting()
-
+ProG.Show('x' A_ScreenWidth - 400 ' y' 45)
 tester() {
-    MonitorStage()
+    
+    PlacingUnits(1, [1, 2, 3, 4])
 }
 
 StartSelectedMode() {
@@ -82,9 +84,25 @@ StartSelectedMode() {
     while !(IFindText(ModeCancel) || IFindText(JoinMatchmaking)) {
         MoveTo()
     }
-    if(i.Mode = 'Winter_Event'){
+    if (i.Mode = "Infinity_Castle") {
+
+        ; Get current difficulty
+        currentDifficulty := i.Map
+        AddLog("Starting Infinity Castle - " currentDifficulty)
+
+        ; Select difficulty with direct clicks
+        if (currentDifficulty = "Normal") {
+            IClick(418, 375)  ; Click Easy Mode
+        } else {
+            IClick(485, 375)  ; Click Hard Mode
+        }
+        ClickUntilGone(0, 0, ModeCancel, , -10, -120)
+
+        RestartStage()
+    }
+    if (i.Mode = 'Winter_Event') {
         AddLog("Starting Winter Event")
-    }else{
+    } else {
         AddLog("Starting " i.Map " - " i.Type)
     }
 

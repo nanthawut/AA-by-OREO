@@ -51,8 +51,8 @@ PlacementSpeed() {
 }
 
 GetForm() {
-    global i := eq.Submit()
-    global card := PCS.Submit()
+    global i := eq.Submit(1)
+    global card := PCS.Submit(1)
 }
 
 saveSetting() {
@@ -101,21 +101,9 @@ IClick(x, y, time := 50, LR := "Left") {
     Sleep(time)
 }
 
-Process := ["", "", "", "", "", "", ""]
-
 AddLog(Text) {
-    Process[7] := StrReplace(Process[6], "➤ ", "")
-    Process[6] := StrReplace(Process[5], "➤ ", "")
-    Process[5] := StrReplace(Process[4], "➤ ", "")
-    Process[4] := StrReplace(Process[3], "➤ ", "")
-    Process[3] := StrReplace(Process[2], "➤ ", "")
-    Process[2] := StrReplace(Process[1], "➤ ", "")
-    Process[1] := "➤ " . text
-    textTool := ""
-    for id, value IN Process {
-        textTool .= value '`n'
-    }
-    ToolTip(textTool, 800, 50)
+    ProG.process.Text := "➤ " Text "`r`n" StrReplace(ProG.process.Text, "➤ ", "")
+
     IniWrite(Text, pathLog, FormatTime(A_Now, 'MM/dd/yyyy'), FormatTime(A_Now, "'H'HH'M'mm'S'ss"))
 }
 
@@ -152,7 +140,20 @@ IFindText(Text, time := 0) {
         if (A_TickCount - tick > time || ok)
             return ok
     }
-    return ok
+    return false
+}
+
+ObjHasValue(Obj, invalue, equal) {
+    for hg IN Obj {
+        try {
+            if hg.%invalue% = equal
+                return true
+        }
+        catch {
+            return false
+        }
+    }
+    return false
 }
 
 sizeDown() {

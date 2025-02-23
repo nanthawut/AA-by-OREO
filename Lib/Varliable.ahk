@@ -12,11 +12,15 @@ Wins := 0
 loss := 0
 unitBuff := []
 buffTime := 0
+cdtemp := 500
 slotU := ['1', '2', '3', '4', '5', '6']
 i := Map()
 placeSpeed := ["2.25 sec", "1.5 sec", "2 sec", "2.5 sec", "2.75 sec", "3 sec"]
 placeTpye := ["Random", "Grid", "Circle", "Spiral", "Up and Down"]
-menuTooltip := "Hi! Click me!! `nF1 Process `nF2 Start Mode `nF3 Reload `nF4 Pause"
+tempPlace := []
+
+menuTooltip := "F1 Units `nF2 Start Mode `nF3 Reload `nF4 Pause `nF5 Proccess"
+
 mAr := {
     mode: ["Story", "Legend", "Raid", "Infinity_Castle", "Contract", "Cursed_Womb", "Portal", "Winter_Event",
         "Challenge"],
