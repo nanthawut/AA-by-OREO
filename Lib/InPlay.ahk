@@ -28,6 +28,31 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
 
             ; Place all units for this slot
             while (placedCounts < placements) {
+                if (slotNum = 6) {
+                    SendInput(slotNum)
+                    Sleep 1000
+                    WinGetClientPos(&OutX, &OutY, &OutWidth, &OutHeight, rblxID)
+                    width := OutWidth + OutX
+                    height := OutHeight + OutY
+                    if (ok := FindText(&X, &Y, OutX + 70, OutY + 100, width - 70, height - 80, 0, 0,
+                        green)) {
+                        val := false
+                        for v in ok {
+                            if (width / 2) + 100 < v.x || v.x < (width / 2) - 100 && (height / 2) - 100 > v.y || v.y >
+                            (height / 2) +
+                            100 {
+                                val := v
+                                break
+                            }
+                        }
+                        if (val)
+                            placementPoints := [{ x: val.x + 15, y: val.y + 15 }]
+                    } else {
+                        placementPoints := GenerateMoreGridPoints(5)
+                    }
+                    SendInput('q')
+                }
+                pointplacecount := 6
                 for point in placementPoints {
 
                     ; CheckAbility()
@@ -42,7 +67,8 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
                         }
                     }
                     if (pointCounts.Count >= placementPoints.Length) {
-                        placementPoints := GenerateMoreGridPoints(15)
+                        placementPoints := GenerateMoreGridPoints(pointplacecount)
+                        pointplacecount++
                         pointCounts.Clear()
                         if (slotNumCheck = slotNum) {
                         } else {
@@ -66,14 +92,20 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
                     MouseMove(point.x, point.y)
                     Sleep 500
                     pressQ := false
-                    if (!IFindText(cantPlace)) {
+                    if (ok := FindText(&X, &Y, point.x, point.y, , , 0, 0,
+                        canPlace, , , , 30, 30)) {
+                        FindText().RangeTip(ok[1].1, ok[1].2, ok[1].3, ok[1].4, (A_Index & 1 ? "Red" : "Blue"),
+                        2)
+
                         placeTime := A_TickCount
                         loop {
                             CheckForCardSelection()
                             SendInput(slotNum)
-                            IClick(point.x, point.y, 0)
+                            Sleep 500
+                            if (!IFindText(AutoOff)) {
+                                IClick(point.x, point.y, 0)
+                            }
                             SendInput("q")
-                            IClick(point.x, point.y)
                             Sleep 50
                             if (ok := IFindText(UpgradeText)) {
                                 successfulCoordinates.Push({ x: point.x, y: point.y, slot: slotNum,
@@ -87,13 +119,15 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
                                 break
                             }
                             SendInput("q")
-                            if (A_TickCount - placeTime > 10000) {
+                            if (A_TickCount - placeTime > 5000) {
                                 break
                             }
                         }
                         break
                     }
                 }
+                if (placedCounts = placements)
+                    break
 
             }
             Reconnect()
@@ -217,6 +251,10 @@ RestartStage() {
     }
     PlacingUnits(1, firstplace)
     PlacingUnits("l")
+    loop 3 {
+        for value IN successfulCoordinates
+            value.levelMax := false
+    }
 
     ; Monitor stage progress
     MonitorStage()
@@ -436,8 +474,8 @@ MonitorStage() {
 CheckForXp() {
     ; Check for lobby text
     if (IFindText(XpText) or (IFindText(XpText2))) {
-        IClick(325, 185)
-        IClick(560, 560)
+        ; IClick(325, 185)
+        ; IClick(560, 560)
         return true
     }
     return false
@@ -642,7 +680,7 @@ cardSelector() {
         IClick(560, 560) ; close upg menu
         sleep 100
     }
-
+    SendInput('q')
     ; IClick(59, 572) ; Untarget Mouse
     sleep 100
     list := []
@@ -727,6 +765,11 @@ cardSelector() {
             Click 2
             AddLog(Format("Picked card: {}", priority))
             sleep 1000
+
+            loop {
+                if !IFindText(pick_card)
+                    break
+            }
             return
         }
     }

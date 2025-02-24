@@ -57,7 +57,16 @@ tester() {
     ;     IClick(value.x, value.y)
     ;     SendInput('q')
     ; }
-    PlacingUnits(1, [1, 2, 3, 4])
+    ; MouseGetPos(&x, &y)
+    ; ok := FindText(&X, &Y, x - 20, y - 20, x + 20, y + 20, 0, 0, canPlace)
+    ; if (IsObject(ok)) {
+    ;     for id, value IN ok
+    ;     FindText().MouseTip(value.x, value.y, 0, 0)
+    ; }
+
+    PlacingUnits(1, [6])
+
+    MonitorStage()
 }
 
 StartSelectedMode() {

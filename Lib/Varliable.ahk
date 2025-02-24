@@ -12,7 +12,7 @@ Wins := 0
 loss := 0
 unitBuff := []
 buffTime := 0
-slotU := ['1', '2', '3', '4', '5', '6']
+slotU := ['0', '1', '2', '3', '4', '5', '6']
 i := Map()
 placeSpeed := ["2.25 sec", "1.5 sec", "2 sec", "2.5 sec", "2.75 sec", "3 sec"]
 placeTpye := ["Random", "Grid", "Circle", "Spiral", "Up and Down"]
@@ -75,18 +75,18 @@ GetCountMode := {
             Rain_Village: 22,
         },
         Legend: {
-            The_Spider: 1,
-            Sacred_Planet: 2,
-            Strange_Town: 3,
-            Ruined_City: 4
-        },
-        Raid: {
             Magic_Hills: 1,
             Space_Center: 3,
             Fabled_Kingdom: 4,
             Virtual_Dungeon: 6,
             Dungeon_Throne: 7,
             Rain_Village: 8,
+        },
+        Raid: {
+            The_Spider: 1,
+            Sacred_Planet: 2,
+            Strange_Town: 3,
+            Ruined_City: 4
         }
     },
     Story: {

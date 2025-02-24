@@ -1,8 +1,13 @@
 #Requires AutoHotkey v2.0
 
-
-cantPlace:="|<>##0.97$0/0/8F1932,0/1/7E2140,0/2/732549"
-cantPlace.="|<>##0.98$0/0/FFD5FF,1/-1/FFD6FF,0/-1/E3B9EF"
+canPlace := "|<>##0.9$0/0/00D7FF"
+canPlace .= "|<>##0.90$0/0/00CBFF"
+canPlace .= "|<>##0.90$0/0/009AFF"
+green := "|<>00A700-0.80$15.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzw"
+green .= "|<>00AB03-0.80$15.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzw"
+cantPlace := "|<>##0.97$0/0/8F1932,0/1/7E2140,0/2/732549"
+cantPlace .= "|<>##0.98$0/0/FFD5FF,1/-1/FFD6FF,0/-1/E3B9EF"
+cantPlace .= "|<>##0.94$0/0/922434,-1/1/75354A,-1/0/7B3145,0/2/7C3246,-1/2/713C50"
 
 AreaText := "|<>*109$36.szzzzzszyzzzkM8A27mM842LU8k0W7U8k8X770sA07DZwC27zzzzzzzzzzzzU"
 ModeCancel :=
@@ -33,7 +38,7 @@ NextLevel :=
     "|<>*113$31.0000000000000000S1s00TVy00MMVU0AAkk063MMA30wAzlUC7sQk73k2M1Vk1A0Ek0640MQ330A01Vk600ks33yMS1UvABUk0a6sQ0H6AD08z3wzwD0w7w0000000000E"
 LobbyText :=
     "|<>*135$54.600408000DU0T0y000Rk0vVr000Mk0lVX000Mk0lVX000MlyltXlswMrzlzXzxzMy3l7WDDXMw0k3U67Xss0k1U333ssMElVX37sswFkXVU7sswFkXVkDssMEVV3kDs80k1U3sTsA1k3U7sTwC3l7WDsTzzzzzzzszzzzzzzzkzzzzzzzzlzzzzzzzzlzzzzzzzzzzzzzzzzzzzU"
-LobbyText.=
+LobbyText .=
     "|<>*114$69.3y0000000000zw00y000000A1k07s000001U301X000000A0AzAQswzbQ1VVzzXzjzzzsAS70s37b4MXVXkk20MsM306AQA0E3730M0lU1XXVssMT22A0M0QT737ssNU103XssMn73AQATwD236MsNXlU3UM0Mn73AS60S3U36MsNXts7sy4sn7bDvzznyzzyTzkyDDwDVzjVwwU"
 VoteStart :=
     "|<>*96$102.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzvzTzzzzzzzzzzzzzzXyDzXzzzz7zzzlzzzVwDzXzzzz7zzzlzzzlwTzXzzzz7zzzlzzzkwQ60sDw41sa10Nzzsss20U7s41k600EzzsMk20U7sY1U210EzzwFlVXX7sD7X6Dltzzw1VlX07s7776Dlzzzy3lVXUDy37X6Dlzzzy3k3UVDtX1U6DkNzzz7s3UU7k31k6DkEzzzbwDksDs7VsaTsNzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzU"

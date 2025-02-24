@@ -51,8 +51,8 @@ PlacementSpeed() {
 }
 
 GetForm() {
-    global i := eq.Submit(1)
-    global card := PCS.Submit(1)
+    global i := eq.Submit(0)
+    global card := PCS.Submit(0)
 }
 
 saveSetting() {
@@ -109,7 +109,7 @@ AddLog(Text) {
 
 ClickUntilGone(x, y, textToFind, time := 100, offsetX := 0, offsetY := 0,
     textToFind2 := "") {
-    WinGetPos(&OutX, &OutY, &OutWidth, &OutHeight, rblxID)
+    WinGetClientPos(&OutX, &OutY, &OutWidth, &OutHeight, rblxID)
     while (ok := FindText(&X, &Y, OutX, OutY, OutWidth + OutX, OutHeight + OutY, 0, 0, textToFind) ||
     textToFind2 && ok := FindText(&X, &Y, OutX, OutY, OutWidth + OutX, OutHeight + OutY, 0, 0, textToFind2)) {
         if (offsetX != 0 || offsetY != 0) {
@@ -135,7 +135,7 @@ GetChallengeReady() {
 IFindText(Text, time := 0) {
     tick := A_TickCount
     loop {
-        WinGetPos(&OutX, &OutY, &OutWidth, &OutHeight, rblxID)
+        WinGetClientPos(&OutX, &OutY, &OutWidth, &OutHeight, rblxID)
         ok := FindText(&X, &Y, OutX, OutY, OutWidth + OutX, OutHeight + OutY, 0, 0, Text)
         if (A_TickCount - tick > time || ok)
             return ok
