@@ -27,26 +27,19 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
         if (placements > 0) {
 
             ; Place all units for this slot
-            while (placedCounts < placements) {
-                if (slotNum = 6) {
+            while (placedCounts < maxUnit) {
+                hillSlot := 'Hill' slotNum
+                if (i.%hillSlot%) {
                     SendInput(slotNum)
                     Sleep 1000
                     WinGetClientPos(&OutX, &OutY, &OutWidth, &OutHeight, rblxID)
                     width := OutWidth + OutX
                     height := OutHeight + OutY
-                    if (ok := FindText(&X, &Y, OutX + 70, OutY + 100, width - 70, height - 80, 0, 0,
+                    if (ok := FindText(&X, &Y, OutX + 70 + 8, OutY + 100 + 32, width - 70 + 8, height + 32 - 80, 0, 0,
                         green)) {
-                        val := false
-                        for v in ok {
-                            if (width / 2) + 100 < v.x || v.x < (width / 2) - 100 && (height / 2) - 100 > v.y || v.y >
-                            (height / 2) +
-                            100 {
-                                val := v
-                                break
-                            }
-                        }
-                        if (val)
-                            placementPoints := [{ x: val.x + 15, y: val.y + 15 }]
+                        FindText().RangeTip(ok[1].1, ok[1].2, ok[1].3, ok[1].4, (A_Index & 1 ? "Red" : "Blue"),
+                        2)
+                        placementPoints := [{ x: ok[1].1, y: ok[1].2 - 15 }]
                     } else {
                         placementPoints := GenerateMoreGridPoints(5)
                     }
@@ -92,13 +85,19 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
                     MouseMove(point.x, point.y)
                     Sleep 500
                     pressQ := false
-                    if (ok := FindText(&X, &Y, point.x, point.y, , , 0, 0,
-                        canPlace, , , , 30, 30)) {
-                        FindText().RangeTip(ok[1].1, ok[1].2, ok[1].3, ok[1].4, (A_Index & 1 ? "Red" : "Blue"),
-                        2)
+                    ofsetx := 17
+                    ofsety := 64
+                    if (ok := FindText(&X, &Y, point.x - ofsetx + 8, point.y - ofsetx + 32, point.x + ofsetx + 8, point
+                        .y + ofsetx + 32, 0, 0, canPlace) && !FindText(&X, &Y, point.x - ofsetx + 8, point.y - ofsetx +
+                            32, point.x + ofsetx + 8, point.y + ofsetx + 32, 0, 0, cantPlace)) {
+                        ; FindText().RangeTip(ok[1].1, ok[1].2, ok[1].3, ok[1].4, (A_Index & 1 ? "Red" : "Blue"),
+                        ; 2)
 
                         placeTime := A_TickCount
                         loop {
+                            if (A_TickCount - placeTime > PlacementSpeed() * 4) {
+                                break
+                            }
                             CheckForCardSelection()
                             SendInput(slotNum)
                             Sleep 500
@@ -107,21 +106,19 @@ PlacingUnits(state?, wSlot := [1, 2, 3, 4, 5, 6]) {
                             }
                             SendInput("q")
                             Sleep 50
-                            if (ok := IFindText(UpgradeText)) {
+                            if (ok := IFindText(UpgradeText, PlacementSpeed())) {
+
                                 successfulCoordinates.Push({ x: point.x, y: point.y, slot: slotNum,
-                                    maxLevel: CheckAbility(point.x, point.y) })
+                                    maxLevel: state = 1 || state = -1 ? CheckAbility(point.x, point.y) : false })
                                 AddLog("Unit Placed Successfully")
                                 placedCounts++
                                 AddLog("Placed Unit " slotNum " (" placedCounts "/" placements ")")
                                 SendInput("q")
-                                IClick(560, 560) ; Move Click
-
+                                IClick(560, 560)
                                 break
                             }
                             SendInput("q")
-                            if (A_TickCount - placeTime > 5000) {
-                                break
-                            }
+                            IClick(560, 560)
                         }
                         break
                     }
@@ -250,10 +247,11 @@ RestartStage() {
         }
     }
     PlacingUnits(1, firstplace)
-    PlacingUnits("l")
+    PlacingUnits(-1)
     loop 3 {
-        for value IN successfulCoordinates
-            value.levelMax := false
+        for index, value IN successfulCoordinates
+            successfulCoordinates[index].levelMax := false
+        UpgradeUnits(A_Index + 1, false)
     }
 
     ; Monitor stage progress
@@ -494,24 +492,27 @@ CheckAbility(x?, y?) {
 
         if (unitBuff.Length = 4) {
             buffTime := A_TickCount
-            for start IN [1, 3, 2, 4] {
-                while (!unitBuff[start].on) {
-                    CheckForCardSelection()
-                    UpgradeUnits(2, true)
-                    if (unitBuff[start].cd <= A_TickCount - buffTime) {
-                        IClick(unitBuff[start].x, unitBuff[start].y)
-                        if (IFindText(AutoOff)) {
-                            buffTime := A_TickCount
-                            IClick(373, 237)
-                            unitBuff[start].on := true
-                            AddLog('Ability ' unitBuff[start].num - 1 ' is On')
-                            IClick(560, 560)
+            if (IFindText(UnitExit)) {
+                for start IN [1, 3, 2, 4] {
+                    while (!unitBuff[start].on) {
+                        if (unitBuff[start].cd <= A_TickCount - buffTime) {
+                            IClick(unitBuff[start].x, unitBuff[start].y)
+                            if (IFindText(AutoOff)) {
+                                buffTime := A_TickCount
+                                IClick(373, 237)
+                                unitBuff[start].on := true
+                                AddLog('Ability ' unitBuff[start].num - 1 ' is On')
+                                IClick(560, 560)
+                            }
                         }
                     }
-                }
+                    CheckForCardSelection()
+                    UpgradeUnits(2, true)
 
+                }
             }
         }
+        IClick(560, 560)
         return found
 
     }

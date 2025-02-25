@@ -1,13 +1,13 @@
 #Requires AutoHotkey v2.0
 
-canPlace := "|<>##0.9$0/0/00D7FF"
-canPlace .= "|<>##0.90$0/0/00CBFF"
+canPlace := "|<>##0.9$0/0/00D7FF|<>##0.9$0/0/EFFFFF|<>##0.8$0/0/F0FFFF|<>##0.8$0/0/D5F8FE|<>##0.8$0/0/D4F6F8"
+canPlace .= "|<>##0.90$0/0/00CBFF|<>##0.9$0/0/D6FFFF|<>##0.9$0/0/CFEEFB|<>##0.9$0/0/D1F9FF|<>##0.9$0/0/D7FFFF"
 canPlace .= "|<>##0.90$0/0/009AFF"
-green := "|<>00A700-0.80$15.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzw"
-green .= "|<>00AB03-0.80$15.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzw"
-cantPlace := "|<>##0.97$0/0/8F1932,0/1/7E2140,0/2/732549"
-cantPlace .= "|<>##0.98$0/0/FFD5FF,1/-1/FFD6FF,0/-1/E3B9EF"
-cantPlace .= "|<>##0.94$0/0/922434,-1/1/75354A,-1/0/7B3145,0/2/7C3246,-1/2/713C50"
+canPlace .= "|<>##0.90$0/0/C0FFF8"
+green := "|<>00A700-0.60$15.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzw"
+green .= "|<>00AB03-0.60$15.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzw"
+cantPlace:="|<>##0.90$0/0/FF8AA3"
+cantPlace.="|<>##0.90$0/0/FF808F"
 
 AreaText := "|<>*109$36.szzzzzszyzzzkM8A27mM842LU8k0W7U8k8X770sA07DZwC27zzzzzzzzzzzzU"
 ModeCancel :=

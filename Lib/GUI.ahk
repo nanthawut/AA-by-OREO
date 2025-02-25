@@ -10,6 +10,7 @@ qwe.card.OnEvent('Click', (*) => PCS.Show())
 qwe.exitbtn := qwe.Add('Picture', 'xp+5 yp+60 w50 h50 Hidden', 'Resource\cross.png')
 qwe.exitbtn.OnEvent('Click', (*) => ExitApp())
 qwe.BackColor := "0e0606"
+qwe.Title:= "Macro OREO"
 WinSetTransColor("0e0606", qwe)
 
 ; SetTimer () => !ToolTip() ? ToolTip() : '', -5000
@@ -64,6 +65,7 @@ eq.AddCheckbox('xs+10 yp+25 vEnable5', 'Unit5')
 eq.AddDropDownList('x+10 w30 vPlacement5', slotU)
 eq.AddDropDownList('x+18 w30 vPriority5', slotU)
 eq.AddDropDownList('x+10 w30 vMaxUnit5', slotU)
+eq.AddCheckbox('x+10 w30 vHill5')
 eq.AddCheckbox('xs+10 yp+25 vEnable6', 'Unit6')
 eq.AddDropDownList('x+10 w30 vPlacement6', slotU)
 eq.AddDropDownList('x+18 w30 vPriority6', slotU)

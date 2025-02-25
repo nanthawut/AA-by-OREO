@@ -64,7 +64,7 @@ tester() {
     ;     FindText().MouseTip(value.x, value.y, 0, 0)
     ; }
 
-    PlacingUnits(1, [6])
+    PlacingUnits(1, [1])
 
     MonitorStage()
 }
